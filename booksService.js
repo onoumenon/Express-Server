@@ -82,6 +82,4 @@ const books = [
   }
 ];
 
-export function getBooks() {
-  return books;
-}
+module.exports = books;

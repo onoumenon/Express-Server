@@ -85,6 +85,15 @@ const books = [
   }
 ];
 
+const verifyToken = (req, res, next) => {
+  const { authorization } = req.headers;
+  if (authorization !== "Bearer token-name-here") {
+    res.sendStatus(403);
+  } else if (authorization === "Bearer token-name-here") {
+    next();
+  }
+};
+
 router
   .route("/:isbn")
   .get((req, res, next) => {
@@ -124,7 +133,7 @@ router
     }
     res.json(filteredBooks);
   })
-  .post((req, res) => {
+  .post(verifyToken, (req, res) => {
     const book = req.body;
     res.status(201).json(book);
   });

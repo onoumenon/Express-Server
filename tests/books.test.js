@@ -125,8 +125,9 @@ describe("/books", () => {
   test("Post a book", () => {
     return request(app)
       .post(route)
-      .send(sampleBook)
+      .set("Authorization", "Bearer token-name-here")
       .set("Content-Type", "application/json")
+      .send(sampleBook)
       .expect(201)
       .then(res => {
         expect(res.body.isbn).toEqual("123");
@@ -143,5 +144,29 @@ describe("/books/:isbn", () => {
       .delete(`${route}/9781593275846`)
       .expect(202)
       .expect(/Deleted Book of isbn/, done);
+  });
+
+  test("Forbids access with wrong token", () => {
+    return request(app)
+      .post(route)
+      .send({ title: "Hey", author: "hey" })
+      .ok(res => res.status === 403)
+      .then(res => {
+        expect(res.status).toBe(403);
+      });
+  });
+
+  test("Grants access with authorization token", () => {
+    return request(app)
+      .post(route)
+      .set("Authorization", "Bearer token-name-here")
+      .send({ title: "Handmaid's Tale", author: "Margaret Atwood" })
+      .expect(201)
+      .then(res => {
+        expect(res.body).toEqual({
+          title: "Handmaid's Tale",
+          author: "Margaret Atwood"
+        });
+      });
   });
 });

@@ -94,22 +94,54 @@ sampleBook = {
 describe("/books", () => {
   const route = "/books";
   test("Get all books", done => {
-    return request(app)
+    request(app)
       .get(route)
       .expect(200)
       .expect("Content-Type", /json/)
       .expect(sampleBooks, done);
   });
+
+  test("Get a book", () => {
+    return request(app)
+      .get(`${route}/9781593275846`)
+      .expect(200)
+      .then(res => {
+        expect(res.body.isbn).toEqual("9781593275846");
+        expect(res.body.title).toEqual("Eloquent JavaScript, Second Edition");
+        expect(res.body.quantity).toEqual(20);
+      });
+  });
+  // 400 throws error and explode and fails the test by default unless you handle the error
+  xtest("Fails as no such book", () => {
+    const id = "100";
+    return request(app)
+      .delete(route(id))
+      .ok(res => res.status === 400)
+      .then(res => {
+        expect(res.status).toBe(400);
+      });
+  });
+
   test("Post a book", () => {
     return request(app)
       .post(route)
       .send(sampleBook)
-      .set("Accept", "application/json")
+      .set("Content-Type", "application/json")
       .expect(201)
       .then(res => {
         expect(res.body.isbn).toEqual("123");
         expect(res.body.title).toEqual("Hey");
         expect(res.body.quantity).toEqual(0);
       });
+  });
+});
+
+describe("/books/:isbn", () => {
+  const route = "/books";
+  test("Delete a Book", done => {
+    request(app)
+      .delete(`${route}/9781593275846`)
+      .expect(202)
+      .expect(/Deleted Book of isbn/, done);
   });
 });

@@ -5,8 +5,8 @@ const sampleBooks = require("../booksService");
 
 sampleBook = {
   quantity: 0,
-  isbn: "123",
-  title: "Hey"
+  isbn: "9781491950297",
+  title: "Programming JavaScript Applications"
 };
 
 describe("/books", () => {
@@ -31,6 +31,15 @@ describe("/books", () => {
         expect(res.body.title).toEqual(expect.any(String));
         expect(res.body.quantity).toEqual(expect.any(Number));
       });
+  });
+
+  test("Posting existing book responded with 405 status", done => {
+    return request(app)
+      .post(route)
+      .set("Authorization", "Bearer token-name-here")
+      .set("Content-Type", "application/json")
+      .send(sampleBook)
+      .expect(405, done);
   });
 
   //needs .catch because error is thrown by supertest when 403 (if not using done)
@@ -61,17 +70,7 @@ describe("/books/:isbn", () => {
   const isbn = "9781593275846";
   const route = `/books/${isbn}`;
 
-  test("Delete a Book", done => {
-    request(app)
-      .delete(route)
-      .set("Authorization", "Bearer token-name-here")
-      .expect(202)
-      .expect(/Deleted Book of isbn/, done);
-  });
-
-  //TO DO: Implement Tests Base on new commits
-
-  xtest("Get a book", () => {
+  test("Get a book", () => {
     return request(app)
       .get(route)
       .expect(200)
@@ -82,7 +81,7 @@ describe("/books/:isbn", () => {
       });
   });
 
-  xtest("Patch a book", () => {
+  test("Patch a book", () => {
     return request(app)
       .patch(route)
       .set("Authorization", "Bearer token-name-here")
@@ -95,7 +94,7 @@ describe("/books/:isbn", () => {
       });
   });
 
-  xtest("Put a book", () => {
+  test("Put a book", () => {
     return request(app)
       .put(route)
       .set("Authorization", "Bearer token-name-here")
@@ -106,5 +105,19 @@ describe("/books/:isbn", () => {
         expect(res.body.quantity).toEqual(0);
         expect(res.body.title).toBeUndefined();
       });
+  });
+
+  test("Delete a Book", done => {
+    request(app)
+      .delete(route)
+      .set("Authorization", "Bearer token-name-here")
+      .expect(202)
+      .expect(/Deleted Book of isbn/, done);
+  });
+
+  test("Getting a Deleted Book returns 404 status", done => {
+    return request(app)
+      .get(route)
+      .expect(404, done);
   });
 });

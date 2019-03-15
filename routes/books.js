@@ -14,50 +14,41 @@ const verifyToken = (req, res, next) => {
 
 router
   .route("/:isbn")
-  .get((req, res, next) => {
+  .get((req, res) => {
     const book = books.find(function(book) {
       return book.isbn === req.params.isbn;
     });
     res.status(200).json(book);
   })
   .delete(verifyToken, (req, res) => {
-    const book = books.find(function(book) {
-      return book.isbn === req.params.isbn;
-    });
-    res.status(202).end(`Deleted Book of isbn: ${book.isbn}`);
+    res.status(202).end(`Deleted Book of isbn: ${req.params.isbn}`);
+    // (TO DO) books = books.filter(book => book.isbn !== req.params.isbn);
   })
+  //TO DO PATCH & PUT change books
   .patch(verifyToken, (req, res) => {
     let book = books.find(function(book) {
       return book.isbn === req.params.isbn;
     });
+
     Object.assign(book, req.body);
-    res
-      .status(202)
-      .end(
-        `Patched Book of isbn: ${book.isbn}, Book is now: ${book.author}, ${
-          book.title
-        }, QNTY: ${book.quantity}`
-      );
+    res.status(202).json(book);
   })
   .put(verifyToken, (req, res) => {
+    const isbn = req.params.isbn;
     let book = books.find(function(book) {
-      return book.isbn === req.params.isbn;
+      return book.isbn === isbn;
     });
-    book = req.body;
-    res
-      .status(202)
-      .end(
-        `Put Book of isbn: ${book.isbn}, Book is now: ${book.author}, ${
-          book.title
-        }, QNTY: ${book.quantity}`
-      );
+
+    book = { isbn, ...req.body };
+    res.status(202).json(book);
   });
 
 router
   .route("/")
   .get((req, res, next) => {
     let filteredBooks = books;
-    for (const key in req.query) {
+    let reqQuery = Object.keys(req.query);
+    for (const key of reqQuery) {
       filteredBooks = filteredBooks.filter(book =>
         book[key].toLowerCase().includes(req.query[key].toLowerCase())
       );
@@ -66,6 +57,7 @@ router
   })
   .post(verifyToken, (req, res) => {
     const book = req.body;
+    books.push(book);
     res.status(201).json(book);
   });
 

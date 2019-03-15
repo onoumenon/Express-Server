@@ -6,6 +6,6 @@ describe("App", () => {
     request(app)
       .get("/")
       .expect(200)
-      .expect("Hello!", done);
+      .expect(/Express Books/i, done);
   });
 });

@@ -1,0 +1,90 @@
+<html>
+  <head>
+    <title>Express Books API</title>
+    <link rel="stylesheet" href="./index.css" />
+  </head>
+  <body class="bg-primary">
+    <div style="margin:100px;">
+      <nav class="navbar navbar-static-top">
+        <div class="container">
+          <a class="navbar-brand text-light" href="/">Express Books API</a>
+          <ul class="nav navbar-nav">
+            <li>
+              <a
+                class="text-light"
+                href="https://github.com/onoumenon/Express-Server"
+                >Github Repo</a
+              >
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <div class="jumbotron" style="padding:40px;">
+        <h1>Description</h1>
+        <p>
+          This is a simple books API using Express.JS. Below are the following
+          routes that are supported:
+        </p>
+        <p>
+          <a class="btn btn-primary btn-lg" href="/books" role="button"
+            >Get all books</a
+          >
+
+          <a
+            class="btn btn-primary btn-lg"
+            href="/books/9781491904244"
+            role="button"
+            >Get book by isbn</a
+          >
+        </p>
+        <p>
+          <a
+            class="btn btn-primary btn-lg"
+            href="/books?title=javascript"
+            role="button"
+            >Search for books by title</a
+          >
+
+          <a
+            class="btn btn-primary btn-lg"
+            href="/books?author=Eric Elliott"
+            role="button"
+            >Search for books by author</a
+          >
+
+          <a
+            class="btn btn-primary btn-lg"
+            href="/books?description=6"
+            role="button"
+            >Search for books by description</a
+          >
+        </p>
+        <p>
+          <a class="btn btn-dark btn-lg" href="/books" role="button"
+            >POST Book with JSON</a
+          >
+
+          <a
+            class="btn btn-dark btn-lg"
+            href="/books/9781491904244"
+            role="button"
+            >PUT Book with JSON</a
+          >
+
+          <a
+            class="btn btn-dark btn-lg"
+            href="/books/9781491904244"
+            role="button"
+            >PATCH Book with JSON</a
+          >
+          <a
+            class="btn btn-dark btn-lg"
+            href="/books/9781491904244"
+            role="button"
+            >DELETE Book</a
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>

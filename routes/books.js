@@ -59,12 +59,12 @@ router
   .route("/")
   .get((req, res, next) => {
     let filteredBooks = books;
-    let reqQuery = Object.keys(req.query);
-    for (const key of reqQuery) {
+    const queries = Object.entries(req.query);
+    queries.forEach(([key, value]) => {
       filteredBooks = filteredBooks.filter(book =>
-        book[key].toLowerCase().includes(reqQuery[key].toLowerCase())
+        book[key].toLowerCase().includes(value.toLowerCase())
       );
-    }
+    });
     if (filteredBooks.length < 1) {
       res.status(404).end("No Book Found");
     }

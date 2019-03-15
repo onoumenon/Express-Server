@@ -19,12 +19,13 @@ describe("/books", () => {
       .expect(sampleBooks, done);
   });
 
-  test("Post a book", () => {
+  test("Post a book that does not exists, returns 201 status", () => {
     return request(app)
       .post(route)
       .set("Authorization", "Bearer token-name-here")
-      .set("Content-Type", "application/json")
+      .set("Accept", "application/json")
       .send(sampleBook)
+      .expect("Content-Type", /json/)
       .expect(201)
       .then(res => {
         expect(res.body.isbn).toEqual(expect.any(String));
@@ -37,7 +38,6 @@ describe("/books", () => {
     return request(app)
       .post(route)
       .set("Authorization", "Bearer token-name-here")
-      .set("Content-Type", "application/json")
       .send(sampleBook)
       .expect(405, done);
   });
@@ -86,6 +86,8 @@ describe("/books/:isbn", () => {
       .patch(route)
       .set("Authorization", "Bearer token-name-here")
       .send({ quantity: 0 })
+      .set("Accept", "application/json")
+      .expect("Content-Type", /json/)
       .expect(202)
       .then(res => {
         expect(res.body.isbn).toEqual("9781593275846");
@@ -94,11 +96,13 @@ describe("/books/:isbn", () => {
       });
   });
 
-  test("Put a book", () => {
+  test("Put a book with only quantity, returns other fields except isbn as empty", () => {
     return request(app)
       .put(route)
       .set("Authorization", "Bearer token-name-here")
       .send({ quantity: 0 })
+      .set("Accept", "application/json")
+      .expect("Content-Type", /json/)
       .expect(202)
       .then(res => {
         expect(res.body.isbn).toEqual("9781593275846");
@@ -107,12 +111,19 @@ describe("/books/:isbn", () => {
       });
   });
 
-  test("Delete a Book", done => {
+  test("Delete a Book that exists", done => {
     request(app)
       .delete(route)
       .set("Authorization", "Bearer token-name-here")
       .expect(202)
       .expect(/Deleted Book of isbn/, done);
+  });
+
+  test("Delete a Book that does not exists returns 404", done => {
+    request(app)
+      .delete(route)
+      .set("Authorization", "Bearer token-name-here")
+      .expect(404, done);
   });
 
   test("Getting a Deleted Book returns 404 status", done => {

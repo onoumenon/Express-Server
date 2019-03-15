@@ -3,4 +3,8 @@ node_js:
   - "11.6.0"
 deploy:
   provider: heroku
-  api_key: secure:
+  api_key: 
+    secure: 3267d688-0d59-4312-a38e-707d13f62027
+  app: api-bookstore-jumpstart
+    on:
+  repo: onoumenon/Express-Server

@@ -1,10 +1,7 @@
-language: node_js
-node_js:
-  - "11.6.0"
 deploy:
   provider: heroku
-  api_key: 
-    secure: 3267d688-0d59-4312-a38e-707d13f62027
+  api_key:
+    secure: GUGtPCn3C3oFjwwf/hoSMvd5hrdrwo8mknbFjS6gdjMo0dGT3s3eeNY60kZrwY4CQBm3XSS91W56M0raHhMunByYwXrL70QPzQnV2rWy0PRZWaEBS/FdCUC3P6ONPqI/HNevE4kMLuSE/IKQmwwnxWFMvhoJsqcxY3Vqun6kyi5Sww6dgzDqeTJdy2R4H8TPBM5fp+tAqp/mf+RnH2emmwwT7+H8Io/YUhiS6mXODQitPTi1oDeI7GbFEEG/z6NVsDrEjwE70aVD8awhCPtJbSz2CXn4xG0a3DzJr0DXFYitzrUmVKjr50DqICytPObT3rus/l89S7OuT+cFLXsf/Y+s/fyc/qkzVBuKwes1qDVNfxlUvb0sp/NlYyLxkvg2GghUsjAivmtOix4XyVKgsQE+e6+5k3fRUjUsJ8SEJ69co+spaEXoXul5DmmS8QX9R2RQ/qYiReFIRq8hN1OR2gSxirV3+PFW1P75BZSOqD5kF3SZ9n0EqRVw2E+Bz9+7Bw9ngzpCv0bfHBB4rfZE3gHaKLN8ZJR6C0h1IRnE5YtdhBjGSihdi6tPvPLqD1Ej6deYt1XtzhF9Rkea9Y+DZGgrHrFNUIxgDMTVAqw1fAGNHes6PKyPq81jJuDjJguYfCm7w9RWHmJeREx97bWTT/ZnAVhgqTAyYkciAGW2akA=
   app: api-bookstore-jumpstart
-    on:
-  repo: onoumenon/Express-Server
+  on:
+    repo: onoumenon/Express-Server

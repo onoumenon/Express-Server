@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const books = require("../booksService");
+let books = require("../booksService");
 
 const verifyToken = (req, res, next) => {
   const { authorization } = req.headers;
@@ -18,19 +18,24 @@ router
     const book = books.find(function(book) {
       return book.isbn === req.params.isbn;
     });
+    if (!book) {
+      res.status(404).end("Book Not Found");
+    }
     res.status(200).json(book);
   })
   .delete(verifyToken, (req, res) => {
+    books = books.filter(book => book.isbn !== req.params.isbn);
     res.status(202).end(`Deleted Book of isbn: ${req.params.isbn}`);
-    // (TO DO) books = books.filter(book => book.isbn !== req.params.isbn);
   })
-  //TO DO PATCH & PUT change books
   .patch(verifyToken, (req, res) => {
     let book = books.find(function(book) {
       return book.isbn === req.params.isbn;
     });
-
+    if (!book) {
+      res.status(404).end("Book Not Found");
+    }
     Object.assign(book, req.body);
+    Object.assign(books, book);
     res.status(202).json(book);
   })
   .put(verifyToken, (req, res) => {
@@ -38,8 +43,11 @@ router
     let book = books.find(function(book) {
       return book.isbn === isbn;
     });
-
+    if (!book) {
+      res.status(404).end("Book Not Found");
+    }
     book = { isbn, ...req.body };
+    Object.assign(books, book);
     res.status(202).json(book);
   });
 
@@ -53,10 +61,19 @@ router
         book[key].toLowerCase().includes(req.query[key].toLowerCase())
       );
     }
+    if (filteredBooks.length < 1) {
+      res.status(404).end("Book Not Found");
+    }
     res.json(filteredBooks);
   })
   .post(verifyToken, (req, res) => {
     const book = req.body;
+    let existingBook = books.find(function(book) {
+      return book.isbn === req.body.isbn;
+    });
+    if (existingBook) {
+      res.status(405).end("Book already exists, please PUT/PATCH instead.");
+    }
     books.push(book);
     res.status(201).json(book);
   });

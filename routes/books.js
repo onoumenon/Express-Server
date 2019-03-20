@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-let books = require("../booksService");
+const Book = require("../models/Book");
 
 const verifyToken = (req, res, next) => {
   const { authorization } = req.headers;
@@ -12,72 +12,76 @@ const verifyToken = (req, res, next) => {
   }
 };
 
-const findBook = id => {
-  return books.find(function(book) {
-    return book.isbn === id;
-  });
-};
-
 router
-  .route("/:isbn")
+  .route("/:id")
   .get((req, res) => {
-    const foundBook = findBook(req.params.isbn);
-    if (!foundBook) {
-      res.status(404).end("Book Not Found");
-    }
-    res.status(200).json(foundBook);
+    Book.findById(req.params.id, (err, book) => {
+      if (err) {
+        return res.sendStatus(500);
+      }
+      if (!book) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(200).json(book);
+    });
   })
   .delete(verifyToken, (req, res) => {
-    const foundBook = findBook(req.params.isbn);
-    if (!foundBook) {
-      res.status(404).end("Cannot Delete Book, As Book Not Found");
-    }
-    books = books.filter(book => book.isbn !== req.params.isbn);
-    res.status(202).end(`Deleted Book of isbn: ${req.params.isbn}`);
-  })
-  .patch(verifyToken, (req, res) => {
-    const foundBook = findBook(req.params.isbn);
-    if (!foundBook) {
-      res.status(404).end("Cannot Patch Book, As Book Not Found");
-    }
-    Object.assign(foundBook, req.body);
-    Object.assign(books, foundBook);
-    res.status(202).json(foundBook);
+    Book.findByIdAndDelete(req.params.id, (err, book) => {
+      if (err) {
+        return res.sendStatus(500);
+      }
+      if (!book) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(202);
+    });
   })
   .put(verifyToken, (req, res) => {
-    const isbn = req.params.isbn;
-    let foundBook = findBook(isbn);
-    if (!foundBook) {
-      res.status(404).end("Cannot Patch Book, As Book Not Found");
-    }
-    foundBook = { isbn, ...req.body };
-    Object.assign(books, foundBook);
-    res.status(202).json(foundBook);
+    Book.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true },
+      (err, book) => {
+        if (err) {
+          return res.sendStatus(500);
+        }
+        if (!book) {
+          return res.sendStatus(404);
+        }
+        return res.status(202).json(book);
+      }
+    );
   });
 
 router
   .route("/")
-  .get((req, res, next) => {
-    let filteredBooks = books;
-    const queries = Object.entries(req.query);
-    queries.forEach(([key, value]) => {
-      filteredBooks = filteredBooks.filter(book =>
-        book[key].toLowerCase().includes(value.toLowerCase())
+  .get((req, res) => {
+    const { author, title } = req.query;
+    const authorRegex = new RegExp(author, "i");
+    const titleRegex = new RegExp(title, "i");
+    if (title && author) {
+      return Book.find({ title: titleRegex, author: authorRegex }).then(book =>
+        res.json(book)
       );
-    });
-    if (filteredBooks.length < 1) {
-      res.status(404).end("No Book Found");
     }
-    res.json(filteredBooks);
+    if (title) {
+      return Book.find({ title: titleRegex }).then(book => res.json(book));
+    }
+
+    if (author) {
+      return Book.find({ author: authorRegex }).then(book => res.json(book));
+    }
+
+    return Book.find().then(book => res.json(book));
   })
   .post(verifyToken, (req, res) => {
-    const book = req.body;
-    let existingBook = findBook(req.body.isbn);
-    if (existingBook) {
-      res.status(405).end("Book already exists, please use PUT/PATCH instead.");
-    }
-    books.push(book);
-    res.status(201).json(book);
+    const book = new Book(req.body);
+    book.save((err, book) => {
+      if (err) {
+        return res.status(500).end();
+      }
+      return res.status(201).json(book);
+    });
   });
 
 module.exports = router;

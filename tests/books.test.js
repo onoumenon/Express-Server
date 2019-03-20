@@ -4,9 +4,12 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 const app = require("../app");
 const Book = require("../models/Book");
 
-const route = "api/v1//books";
+const route = (params = "") => {
+  const path = "/api/v1/books";
+  return `${path}/${params}`;
+};
 
-describe("Books API", () => {
+describe("Books", () => {
   let mongod;
   let db;
 
@@ -17,7 +20,10 @@ describe("Books API", () => {
     await mongoose.connect(uri, {
       autoReconnect: true,
       reconnectTries: Number.MAX_VALUE,
-      reconnectInterval: 1000
+      reconnectInterval: 1000,
+      useNewUrlParser: true,
+      useCreateIndex: true,
+      useFindAndModify: false
     });
     db = mongoose.connection;
   });
@@ -43,11 +49,11 @@ describe("Books API", () => {
 
   afterAll(async () => {
     mongoose.disconnect();
-    await mongoServer.stop();
+    await mongod.stop();
   });
 
-  describe("[GET] books", () => {
-    test("Get all books", done => {
+  describe("[GET] Search for books", () => {
+    test("returns all books", () => {
       const expectedBooks = [
         {
           isbn: "9781593275846",
@@ -60,81 +66,92 @@ describe("Books API", () => {
           author: "Addy Osmani"
         }
       ];
-      request(app)
-        .get(route)
+
+      return request(app)
+        .get(route())
+        .expect("content-type", /json/)
         .expect(200)
-        .expect("Content-Type", /json/)
         .then(res => {
           const books = res.body;
-
-          expect(books.length).toBe(2);
           books.forEach((book, index) => {
             expect(book.title).toBe(expectedBooks[index].title);
             expect(book.author).toBe(expectedBooks[index].author);
           });
         });
-      done();
     });
 
-    test("return a book matching title query", done => {
-      request(app)
-        .get(route)
+    test("returns books matching the title query", () => {
+      return request(app)
+        .get(route())
         .query({ title: "Learning JavaScript Design Patterns" })
         .expect("content-type", /json/)
         .expect(200)
         .then(res => {
           const book = res.body[0];
-          expect(book.title).toBe("Learning JavaScript Design Patterns");
+          expect(book.title).toEqual("Learning JavaScript Design Patterns");
         });
-      done();
     });
 
-    test("return books matching author query", done => {
-      request(app)
-        .get(route)
+    test("returns books matching the author query", () => {
+      return request(app)
+        .get(route())
         .query({ author: "Addy Osmani" })
         .expect("content-type", /json/)
         .expect(200)
         .then(res => {
           const book = res.body[0];
-          expect(book.author).toBe("Addy Osmani");
-          expect(book.title).toBe("Learning JavaScript Design Patterns");
+          expect(book.title).toEqual("Learning JavaScript Design Patterns");
         });
-      done();
     });
   });
 
-  describe("[POST] Create book", () => {
-    test("denies access when no token given", done => {
-      request(app)
-        .post(route)
-        .send({ title: "ABC", author: "DEF" })
-        .expect(403),
-        done();
+  describe("[POST] Creates a new book", () => {
+    test("denies access when no token is given", () => {
+      return request(app)
+        .post(route())
+        .send({
+          isbn: "9781449331818",
+          title: "Learning JavaScript Design Patterns",
+          author: "Addy Osmani"
+        })
+        .catch(err => {
+          expect(err.status).toBe(403);
+        });
     });
 
-    test("denies access if token is invalid", done => {
-      request(app)
-        .post(route)
-        .set("Authorization", "Bearer invalid-token")
-        .send({ title: "ABC", author: "DEF" })
-        .expect(403),
-        done();
+    test("denies access when invalid token is given", () => {
+      return request(app)
+        .post(route())
+        .set("Authorization", "Bearer some-invalid-token")
+        .send({
+          isbn: "9781449331818",
+          title: "Learning JavaScript Design Patterns",
+          author: "Addy Osmani"
+        })
+        .catch(res => {
+          expect(res.status).toBe(403);
+        });
     });
 
-    test("creates a new book in db", async () => {
+    test("creates a new book record in the database", async () => {
       const res = await request(app)
-        .post(route)
+        .post(route())
         .set("Authorization", "Bearer token-name-here")
-        .send({ title: "ABC", author: "DEF" })
+        .send({
+          isbn: "9781449331818",
+          title: "Learning JavaScript Design Patterns",
+          author: "Addy Osmani"
+        })
         .expect(201);
 
-      expect(res.body.title).toBe("ABC");
-      expect(res.body.author).toBe("DEF");
+      expect(res.body.title).toBe("Learning JavaScript Design Patterns");
+      expect(res.body.author).toBe("Addy Osmani");
 
-      const book = Book.findOne({ title: "ABC" });
-      expect(book.title).toBe("ABC");
-      expect(book.author).toBe("DEF");
+      const book = await Book.findOne({
+        title: "Learning JavaScript Design Patterns"
+      });
+      expect(book.title).toBe("Learning JavaScript Design Patterns");
+      expect(book.author).toBe("Addy Osmani");
     });
   });
 
@@ -145,34 +162,36 @@ describe("Books API", () => {
       });
 
       const res = await request(app)
-        .put(`${route}/${_id}`)
+        .put(route(_id))
+        .set("Authorization", "Bearer token-name-here")
         .send({
+          isbn: "9781449331818",
           title: "Learning JavaScript Design Patterns",
-          author: "Some Edit Here"
+          author: "Edit here"
         })
         .expect(202);
 
       expect(res.body).toEqual(
         expect.objectContaining({
           title: "Learning JavaScript Design Patterns",
-          author: "Some Edit Here"
+          author: "Edit here"
         })
       );
     });
 
-    test("returns 400 Bad Request as there is no such book", done => {
+    test("returns 404 Status when editing non-existing book", () => {
       const id = "100";
-      return (
-        request(app)
-          .put(`${route}/${_id}`)
-          .send({
-            id: 100,
-            title: "ABC",
-            author: "DEF"
-          })
-          .expect(400),
-        done()
-      );
+      return request(app)
+        .put(route(id))
+        .set("Authorization", "Bearer token-name-here")
+        .send({
+          _id: 100,
+          title: "The Perennial Philosophy",
+          author: "Aldous Huxley"
+        })
+        .catch(res => {
+          expect(res.status).toBe(404);
+        });
     });
   });
 
@@ -183,7 +202,8 @@ describe("Books API", () => {
       });
 
       await request(app)
-        .delete(`${route}/${_id}`)
+        .delete(route(_id))
+        .set("Authorization", "Bearer token-name-here")
         .expect(202);
 
       const book = await Book.findById(_id);
@@ -193,7 +213,8 @@ describe("Books API", () => {
     test("returns 404 Not Found as there is no such book", done => {
       const _id = "5c8fb5c41529bf25dcba41a7";
       request(app)
-        .delete(`${route}/${_id}`)
+        .delete(route(_id))
+        .set("Authorization", "Bearer token-name-here")
         .expect(404, done);
     });
   });

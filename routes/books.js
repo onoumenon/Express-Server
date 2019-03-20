@@ -16,22 +16,22 @@ router
   .route("/:id")
   .get((req, res) => {
     Book.findById(req.params.id, (err, book) => {
-      if (err) {
-        return res.sendStatus(500);
-      }
       if (!book) {
         return res.sendStatus(404);
+      }
+      if (err) {
+        return res.sendStatus(500);
       }
       return res.sendStatus(200).json(book);
     });
   })
   .delete(verifyToken, (req, res) => {
     Book.findByIdAndDelete(req.params.id, (err, book) => {
-      if (err) {
-        return res.sendStatus(500);
-      }
       if (!book) {
         return res.sendStatus(404);
+      }
+      if (err) {
+        return res.sendStatus(500);
       }
       return res.sendStatus(202);
     });
@@ -42,11 +42,11 @@ router
       req.body,
       { new: true, runValidators: true },
       (err, book) => {
-        if (err) {
-          return res.sendStatus(500);
-        }
         if (!book) {
           return res.sendStatus(404);
+        }
+        if (err) {
+          return res.sendStatus(500);
         }
         return res.status(202).json(book);
       }

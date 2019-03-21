@@ -4,6 +4,12 @@ const { MongoMemoryServer } = require("mongodb-memory-server");
 const app = require("../app");
 const Book = require("../models/Book");
 
+jest.mock("jsonwebtoken");
+const jwt = require("jsonwebtoken");
+
+jest.mock("../models/User");
+const User = require("../models/User");
+
 const route = (params = "") => {
   const path = "/api/v1/books";
   return `${path}/${params}`;
@@ -44,6 +50,8 @@ describe("Books", () => {
   });
 
   afterEach(async () => {
+    jwt.verify.mockReset();
+    User.findOne.mockReset();
     await db.dropCollection("books");
   });
 
@@ -120,6 +128,8 @@ describe("Books", () => {
     });
 
     test("denies access when invalid token is given", () => {
+      jwt.verify.mockRejectedValueOnce({ id: "123" });
+      User.findOne.mockRejectedValueOnce({ id: "123" });
       return request(app)
         .post(route())
         .set("Authorization", "Bearer some-invalid-token")
@@ -134,6 +144,8 @@ describe("Books", () => {
     });
 
     test("creates a new book record in the database", async () => {
+      jwt.verify.mockResolvedValueOnce({ id: 100 });
+      User.findOne.mockResolvedValueOnce({ id: "123" });
       const res = await request(app)
         .post(route())
         .set("Authorization", "Bearer token-name-here")
@@ -157,6 +169,8 @@ describe("Books", () => {
 
   describe("[PUT] Edits an existing book", () => {
     test("edits a book's title and author", async () => {
+      jwt.verify.mockResolvedValueOnce({ id: 100 });
+      User.findOne.mockResolvedValueOnce({ id: "123" });
       const { _id } = await Book.findOne({
         title: "Learning JavaScript Design Patterns"
       });
@@ -180,6 +194,8 @@ describe("Books", () => {
     });
 
     test("returns 404 Status when editing non-existing book", () => {
+      jwt.verify.mockResolvedValueOnce({ id: 100 });
+      User.findOne.mockResolvedValueOnce({ id: "123" });
       const id = "100";
       return request(app)
         .put(route(id))
@@ -197,6 +213,8 @@ describe("Books", () => {
 
   describe("[DELETE] Removes an existing book", () => {
     test("removes a book from the database", async () => {
+      jwt.verify.mockResolvedValueOnce({ id: "123" });
+      User.findOne.mockResolvedValueOnce({ id: "123" });
       const { _id } = await Book.findOne({
         title: "Learning JavaScript Design Patterns"
       });
@@ -211,6 +229,8 @@ describe("Books", () => {
     });
 
     test("returns 404 Not Found as there is no such book", done => {
+      jwt.verify.mockResolvedValueOnce({ id: "123" });
+      User.findOne.mockResolvedValueOnce({ id: "123" });
       const _id = "5c8fb5c41529bf25dcba41a7";
       request(app)
         .delete(route(_id))

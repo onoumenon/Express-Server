@@ -1,14 +1,29 @@
 const express = require("express");
 const router = express.Router();
+const jwt = require("jsonwebtoken");
 
+const User = require("../models/User");
 const Book = require("../models/Book");
+const secret = "SECRET";
 
-const verifyToken = (req, res, next) => {
-  const { authorization } = req.headers;
-  if (authorization !== "Bearer token-name-here") {
-    res.sendStatus(403);
-  } else if (authorization === "Bearer token-name-here") {
+// implement audience? howto in insomnia? , {audience: req.hostname}
+
+const verifyToken = async (req, res, next) => {
+  try {
+    if (!req.headers.authorization) {
+      throw new Error("Invalid Token");
+    }
+    const token = req.headers.authorization.split("Bearer ")[1];
+
+    const userData = await jwt.verify(token, secret);
+    const user = await User.findOne({ id: userData.id });
+
+    if (!userData || !user) {
+      throw new Error("Invalid Token");
+    }
     next();
+  } catch (err) {
+    return res.status(403).send(err.message);
   }
 };
 

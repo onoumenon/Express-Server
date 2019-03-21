@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const router = express.Router();
+const bcrypt = require("bcrypt");
 const User = require("../models/User");
 
 router.route("/").get((req, res, next) => {
@@ -12,10 +13,23 @@ const secret = "SECRET"; // should be in env file
 router
   .route("/token")
   .get(async (req, res) => {
-    const userData = { _id: "123" };
-    const exp = { expiresIn: "24hr" };
-    const token = await jwt.sign(userData, secret, exp);
-    return res.status(200).json({ token });
+    try {
+      const { username, password } = req.body;
+      const user = await User.findOne({ username });
+      if (!user) {
+        throw new Error("You are not authorized");
+      }
+      const match = await bcrypt.compare(password, user.password);
+      if (!match) {
+        throw new Error("You are not authorized");
+      }
+      const userId = { user: user.id };
+      const exp = { expiresIn: "24h" };
+      const token = await jwt.sign(userId, secret, exp);
+      return res.status(200).json({ token });
+    } catch (err) {
+      return res.status(500).json(err.message);
+    }
   })
   .post(async (req, res) => {
     if (!req.headers.authorization) {
@@ -35,6 +49,25 @@ router.route("/register").post(async (req, res) => {
     res.sendStatus(204);
   } catch (err) {
     res.status(400).json(err);
+  }
+});
+
+router.route("/login").post(async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+    if (!user) {
+      throw new Error("You are not authorized");
+    }
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      throw new Error("You are not authorized");
+    }
+
+    // res.cookie("cookie", "cookie text");
+    return res.status(200).end("You are logged in");
+  } catch (err) {
+    return res.status(401).send(err.message);
   }
 });
 

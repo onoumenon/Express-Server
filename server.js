@@ -14,8 +14,6 @@ mongoose.connect(mongodbUri, {
 });
 const db = mongoose.connection;
 
-mongoose.connect("mongodbUri", { useNewUrlParser: true });
-
 db.on("error", err => {
   console.error("Unable to connect to the database"), err;
 });

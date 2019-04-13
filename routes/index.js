@@ -3,12 +3,15 @@ const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
 const User = require("../models/User");
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 
 router.route("/").get((req, res, next) => {
   res.render("index.html");
 });
 
-const secret = "SECRET"; // should be in env file
+const secret = process.env.SECRET;
 
 router
   .route("/token")

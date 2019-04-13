@@ -1,10 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const jwt = require("jsonwebtoken");
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config();
+}
 
 const User = require("../models/User");
 const Book = require("../models/Book");
-const secret = "SECRET";
+const secret = process.env.SECRET;
 
 // implement audience? howto in insomnia? , {audience: req.hostname}
 

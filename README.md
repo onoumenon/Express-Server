@@ -1,5 +1,7 @@
 # Express-Server
 
+[![Build Status](https://travis-ci.org/onoumenon/Express-Server.svg?branch=master)](https://travis-ci.org/onoumenon/Express-Server)
+
 A simple express server serving a Books API
 
 ## Getting Started
